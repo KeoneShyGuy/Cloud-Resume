@@ -1,3 +1,21 @@
-{
-background-color: #d5b495;
+
+body {
+  background-color: #d5b495;
+  font-family: "Roboto Condensed", sans-serif;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.roboto-condensed-400-normal {
+  font-family: "Roboto Condensed", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+.roboto-condensed-400-italic {
+  font-family: "Roboto Condensed", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: italic;
 }
