@@ -1,7 +1,14 @@
-from os import name
-
+import json
+import os
+import sys
+import uuid
 import azure.functions as func
 import logging
+
+from azure.core.exceptions import AzureError
+from azure.cosmos import CosmosClient, PartitionKey
+from azure.identity import DefaultAzureCredential
+
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -33,3 +40,15 @@ def visitCounter(req: func.HttpRequest) -> func.HttpResponse:
     # This is a simple visit counter function that increments a counter 
     # stored in Azure Table Storage each time the function is called.
     return func.HttpResponse("You can count on the counter 👌🏿")
+
+@app.route(route="test")
+def test(req: func.HttpRequest) -> func.HttpResponse:
+
+    uri = os.getenv("ACCOUNT_URI")
+    key = os.getenv("ACCOUNT_KEY")
+    client = CosmosClient(uri, key)
+
+    return func.HttpResponse(
+        f"URI exists: {uri is not None}, KEY exists: {key is not None}, CLIENT exists: {client is not None}",
+        status_code=200
+    )
