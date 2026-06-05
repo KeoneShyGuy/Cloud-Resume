@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "Cloud-Resume",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"debug.internalConsoleOptions": "neverOpen"
+	}
+}
