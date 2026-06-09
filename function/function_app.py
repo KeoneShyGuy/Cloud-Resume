@@ -5,11 +5,10 @@ import uuid
 import azure.functions as func
 import logging
 
-
 from azure.core.exceptions import AzureError
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.identity import DefaultAzureCredential
-
+from cosmosCounter import updateCount
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -56,5 +55,11 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="count")
 def count(req: func.HttpRequest) -> func.HttpResponse:
+
+    testItem = "bCount"
+    testContainer = "bContainer"
+    testDB = "bDatabase"
+    testPartition = "visitCounters"
+    tempCounter = updateCount(testItem, testContainer, testDB, testPartition)
     
-    return
+    return func.HttpResponse(f"Count updated!Counter item: {tempCounter}")
