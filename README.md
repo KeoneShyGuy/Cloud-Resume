@@ -5,6 +5,9 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 cd function
+
 python -m venv .venv
+
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
 npm install -g azure-functions-core-tools@4 --unsafe-perm true

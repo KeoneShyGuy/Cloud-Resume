@@ -5,6 +5,7 @@ import uuid
 import azure.functions as func
 import logging
 
+
 from azure.core.exceptions import AzureError
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.identity import DefaultAzureCredential
@@ -52,3 +53,8 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
         f"URI exists: {uri is not None}, KEY exists: {key is not None}, CLIENT exists: {client is not None}",
         status_code=200
     )
+
+@app.route(route="count")
+def count(req: func.HttpRequest) -> func.HttpResponse:
+    
+    return
