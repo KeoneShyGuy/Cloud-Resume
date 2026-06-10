@@ -10,6 +10,8 @@ from azure.cosmos import CosmosClient, PartitionKey
 from azure.identity import DefaultAzureCredential
 from cosmosCounter import addNameSubmission, updateCount
 
+# This creates the Azure Functions app object.
+# ANONYMOUS means the frontend can call these routes without passing a function key.
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.route(route="http_trigger")
@@ -33,17 +35,11 @@ def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
              status_code=200
         )
 
-@app.route(route="visitCounter")
-def visitCounter(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
-
-    # This is a simple visit counter function that increments a counter 
-    # stored in Azure Table Storage each time the function is called.
-    return func.HttpResponse("You can count on the counter 👌🏿")
-
 @app.route(route="test")
 def test(req: func.HttpRequest) -> func.HttpResponse:
 
+    # Quick health check for local troubleshooting.
+    # It verifies that the app can see the Cosmos DB settings without printing the secret values.
     uri = os.getenv("ACCOUNT_URI")
     key = os.getenv("ACCOUNT_KEY")
     client = CosmosClient(uri, key)
@@ -56,12 +52,17 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="count", methods=["GET"])
 def count(req: func.HttpRequest) -> func.HttpResponse:
 
-    counter_item = "bCount"
-    counter_container = "bContainer"
-    database = "bDatabase"
-    counter_partition = "visitCounters"
+    # These IDs tell the helper which Cosmos database/container/document to use.
+    # The counter is one document that gets updated over and over.
+    counter_item = "visit-counter"
+    counter_container = "visit-container"
+    database = "counter-database"
+    counter_partition = "counter"
+
+    # updateCount reads the current number, adds 1, then writes it back to Cosmos DB.
     tempCounter = updateCount(counter_item, counter_container, database, counter_partition)
     
+    # The React app expects JSON, so return only the values it needs.
     return func.HttpResponse(
         json.dumps({
             "counter": tempCounter["counter"],
@@ -73,6 +74,7 @@ def count(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="nameSubmission", methods=["POST"])
 def nameSubmission(req: func.HttpRequest) -> func.HttpResponse:
+    # The React form sends JSON like: { "name": "Keone" }.
     try:
         req_body = req.get_json()
     except ValueError:
@@ -82,6 +84,7 @@ def nameSubmission(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400
         )
 
+    # Always validate user input on the backend, even if the frontend also checks it.
     name = str(req_body.get("name", "")).strip()
     if not name:
         return func.HttpResponse(
@@ -90,11 +93,14 @@ def nameSubmission(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400
         )
 
-    name_submission_container = "nameSubmissions"
-    database = "bDatabase"
+    # Name submissions are separate documents, so they live in their own container.
+    # That keeps append-only records separate from the single counter document.
+    name_submission_container = "name-submissions"
+    database = "counter-database"
     partition_key = "type"
     submission = addNameSubmission(name, name_submission_container, database, partition_key)
 
+    # 201 means "created". The response is useful for testing in browser DevTools or curl.
     return func.HttpResponse(
         json.dumps({
             "id": submission["id"],
