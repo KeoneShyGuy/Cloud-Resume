@@ -9,6 +9,10 @@
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}/function"
+      },
+      "presentation": {
+        "group": "dev",
+        "panel": "dedicated"
       }
     },
     {

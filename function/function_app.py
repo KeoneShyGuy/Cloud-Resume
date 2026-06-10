@@ -62,4 +62,4 @@ def count(req: func.HttpRequest) -> func.HttpResponse:
     testPartition = "visitCounters"
     tempCounter = updateCount(testItem, testContainer, testDB, testPartition)
     
-    return func.HttpResponse(f"Count updated!Counter item: {tempCounter}")
+    return func.HttpResponse(f"Count updated at {tempCounter['timestamp']}! Counter item: {tempCounter['counter']}")

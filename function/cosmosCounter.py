@@ -8,12 +8,13 @@ from zoneinfo import ZoneInfo
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceExistsError, CosmosResourceNotFoundError
 
-#    with open("local.settings.json") as f:
-#        settings = json.load(f)
+with open("local.settings.json") as f:
+    settings = json.load(f)
 
 values = settings["Values"]
-uri = os.getenv("ACCOUNT_URI")
-key = os.getenv("ACCOUNT_KEY")
+
+uri = os.getenv("ACCOUNT_URI") or values.get("ACCOUNT_URI")
+key = os.getenv("ACCOUNT_KEY") or values.get("ACCOUNT_KEY")
 client = CosmosClient(uri, credential=key)
 
 # dbID = "testing-db"
@@ -49,14 +50,27 @@ def createContainer(containerID: str, dbID: str, partitionKey: str):
         # print(f"Partition key path: {partition_key_path.path}")
         container = database.create_container_if_not_exists(
             id=containerID,
-            partition_key=partition_key_path,
+            partition_key=partition_key_path
             # offer_throughput=400,  // causes serverless to fail
         )
         print(f"Container created or returned: {container.id}")
         return container
+    except CosmosResourceNotFoundError:
+        database = createDatabase(dbID=dbID)
+        partition_key_path = PartitionKey(path=str("/" + partitionKey))
+        container = database.create_container_if_not_exists(
+            id=containerID,
+            partition_key=partition_key_path
+        )
+        print(f"Container created or returned: {container.id}")
+        return container
+#   except CosmosHttpResponseError:
+#       print("Request to the Azure Cosmos database service failed.")
+# Source - https://stackoverflow.com/a/1483488
+# Posted by jldupont, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-06-09, License - CC BY-SA 4.0
+    except Exception as e: print(e)
 
-    except CosmosHttpResponseError:
-        print("Request to the Azure Cosmos database service failed.")
 
 # print(str(now))
 
@@ -97,7 +111,7 @@ testPartition = "visitCounters"
 #   runs fine
 #   createDatabase(testDB)
 #   runs fine
-createContainer(testContainer, "cDatabase", testPartition)
+#createContainer(testContainer, "cDatabase", testPartition)
 
 #   updateCount(testItem, testContainer, testDB, testPartition)
 
