@@ -4,12 +4,15 @@
 import json
 import os
 import datetime
+import uuid
 from zoneinfo import ZoneInfo
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceExistsError, CosmosResourceNotFoundError
 
-with open("local.settings.json") as f:
-    settings = json.load(f)
+settings = {"Values": {}}
+if os.path.exists("local.settings.json"):
+    with open("local.settings.json") as f:
+        settings = json.load(f)
 
 values = settings["Values"]
 
@@ -84,7 +87,7 @@ def updateCount(itemID: str, containerID: str, dbID: str, partitionKey: str):
 
     except CosmosResourceNotFoundError:
         print("Counter item doesn't exist. Creating it.")
-        newCount = 0
+        newCount = 1
 
     tempCounter = {
         "id": itemID,
@@ -97,6 +100,22 @@ def updateCount(itemID: str, containerID: str, dbID: str, partitionKey: str):
     test_counter = container.upsert_item(tempCounter)
     print(f"Count: {test_counter['counter']}")
     return test_counter
+
+def addNameSubmission(name: str, containerID: str, dbID: str, partitionKey: str):
+    createDatabase(dbID)
+    container = createContainer(containerID, dbID, partitionKey)
+
+    timestamp = datetime.datetime.now(EST).isoformat()
+    submission = {
+        "id": str(uuid.uuid4()),
+        "type": "nameSubmission",
+        "name": name,
+        "timestamp": timestamp
+    }
+
+    created_submission = container.create_item(submission)
+    print(f"Name submission created: {created_submission['id']}")
+    return created_submission
     
 print(f"URI exists: {uri is not None}")
 print(f"KEY exists: {key is not None}")

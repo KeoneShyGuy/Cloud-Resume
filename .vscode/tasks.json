@@ -27,10 +27,28 @@
       }
     },
     {
+      "label": "Activate Function venv",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Set-Location '${workspaceFolder}\\function'; . .\\.venv\\Scripts\\Activate.ps1"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "group": "dev",
+        "panel": "dedicated"
+      }
+    },
+    {
       "label": "Start Dev Environment",
       "dependsOn": [ 
         "func: host start", 
-        "Start App" 
+        "Start App",
+        "Activate Function venv"
       ],
       "dependsOrder": "parallel",
       "problemMatcher": [],

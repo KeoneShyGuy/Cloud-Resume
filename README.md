@@ -4,6 +4,10 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+
+This project requires Python 3.12.
+Python 3.14 is not currently supported by Azure Functions Core Tools.
+
 cd function
 
 python -m venv .venv

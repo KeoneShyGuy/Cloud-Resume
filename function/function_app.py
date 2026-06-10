@@ -8,9 +8,9 @@ import logging
 from azure.core.exceptions import AzureError
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.identity import DefaultAzureCredential
-from cosmosCounter import updateCount
+from cosmosCounter import addNameSubmission, updateCount
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.route(route="http_trigger")
 def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
@@ -53,13 +53,54 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
         status_code=200
     )
 
-@app.route(route="count")
+@app.route(route="count", methods=["GET"])
 def count(req: func.HttpRequest) -> func.HttpResponse:
 
-    testItem = "bCount"
-    testContainer = "bContainer"
-    testDB = "bDatabase"
-    testPartition = "visitCounters"
-    tempCounter = updateCount(testItem, testContainer, testDB, testPartition)
+    counter_item = "bCount"
+    counter_container = "bContainer"
+    database = "bDatabase"
+    counter_partition = "visitCounters"
+    tempCounter = updateCount(counter_item, counter_container, database, counter_partition)
     
-    return func.HttpResponse(f"Count updated at {tempCounter['timestamp']}! Counter item: {tempCounter['counter']}")
+    return func.HttpResponse(
+        json.dumps({
+            "counter": tempCounter["counter"],
+            "timestamp": tempCounter["timestamp"]
+        }),
+        mimetype="application/json",
+        status_code=200
+    )
+
+@app.route(route="nameSubmission", methods=["POST"])
+def nameSubmission(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        req_body = req.get_json()
+    except ValueError:
+        return func.HttpResponse(
+            json.dumps({"error": "Request body must be valid JSON."}),
+            mimetype="application/json",
+            status_code=400
+        )
+
+    name = str(req_body.get("name", "")).strip()
+    if not name:
+        return func.HttpResponse(
+            json.dumps({"error": "Name is required."}),
+            mimetype="application/json",
+            status_code=400
+        )
+
+    name_submission_container = "nameSubmissions"
+    database = "bDatabase"
+    partition_key = "type"
+    submission = addNameSubmission(name, name_submission_container, database, partition_key)
+
+    return func.HttpResponse(
+        json.dumps({
+            "id": submission["id"],
+            "name": submission["name"],
+            "timestamp": submission["timestamp"]
+        }),
+        mimetype="application/json",
+        status_code=201
+    )
