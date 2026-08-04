@@ -55,9 +55,14 @@ def count(req: func.HttpRequest) -> func.HttpResponse:
     # These IDs tell the helper which Cosmos database/container/document to use.
     # The counter is one document that gets updated over and over.
     counter_item = "visit-counter"
-    counter_container = "visit-container"
+    # Use a dedicated container whose partition key is /type. The original
+    # visit-container used /counter, which collided with the numeric counter
+    # field and caused every request to look in the wrong logical partition.
+    # Cosmos DB cannot change an existing container's partition-key path, so a
+    # new container name is required for the corrected schema.
+    counter_container = "visit-counter-v2"
     database = "counter-database"
-    counter_partition = "counter"
+    counter_partition = "type"
 
     # updateCount reads the current number, adds 1, then writes it back to Cosmos DB.
     tempCounter = updateCount(counter_item, counter_container, database, counter_partition)

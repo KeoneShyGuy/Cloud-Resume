@@ -81,8 +81,9 @@ def updateCount(itemID: str, containerID: str, dbID: str, partitionKey: str):
         print("Counter item doesn't exist. Creating it.")
         newCount = 1
 
-    # The partition key property name is dynamic here.
-    # If partitionKey is "counter", this writes: "counter": "counter".
+    # Keep the stable partition value separate from the numeric count. Using
+    # "counter" as both names would overwrite the partition value in this dict
+    # and make the next point read miss the document.
     tempCounter = {
         "id": itemID,
         "timestamp": str(datetime.datetime.now(EST)),
